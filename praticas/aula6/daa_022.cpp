@@ -6,6 +6,7 @@
 #include <iostream>
 #include <climits>
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 
@@ -64,16 +65,15 @@ int size(Node t) {
 // funcoes de verificação
 
 // verificar se é binária
-bool binary_tree(Node t){
+bool binary_tree(Node t, int min, int max){
   if(t->isNull) return true;
-  if((!t->left->isNull) && (t->left->value > t->value)) return false;
-  if((!t->right->isNull) && (t->right->value < t->value)) return false; 
-  return binary_tree(t->left) && binary_tree(t->right);
+  if(t->value < min || t->value > max) return false;
+  return binary_tree(t->left,min,t->value-1) && binary_tree(t->right,t->value+1,max);
 }
 
 //verificar se root é preta
 bool root_property(Node t){
-  return(!t->isNull && t->isBlack);
+  return(t->isBlack);
 }
 
 // verificar se filhos de nós vermelhos são pretos
@@ -83,15 +83,37 @@ bool red_property(Node t){
   return red_property(t->left) && red_property(t->right);
 }
 
+int black_height(Node t){
+
+  int count=0;
+
+  while(!t->isNull){
+    t = t->left;
+    if(t->isBlack) count++;
+  }
+  return count;
+}
+
+bool black_property(Node t, int bh, int count){
+
+  if(t->isNull) return count==bh;
+  if(t->isBlack) count++;
+  return black_property(t->left, bh, count) && black_property(t->right, bh, count);
+
+}
+
 int main() {
   int i, n;
   Node root;
-
   cin >> n;
+  int min = std::numeric_limits<int>::min();
+  int max = std::numeric_limits<int>::max();
   for (i=0; i<n; i++) {
     root = readPreOrder();
-    printf("Tree with %d nodes (min=%d, max=%d) ", size(root), minimum(root), maximum(root));
-    if(red_property(root)) cout << "SIM" << '\n';
+    int bh = black_height(root);
+    if(binary_tree(root,min,max) && root_property(root) && red_property(root) && black_property(root,bh,0) ) {
+      cout << "SIM" << '\n';
+    }
     else cout << "NAO" << '\n';
   }
 
